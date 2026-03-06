@@ -1,0 +1,382 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅游攻略规划 H5</title>
+  <style>
+    :root { --bg:#ecfeff; --card:#fff; --primary:#0f766e; --line:#e2e8f0; --muted:#475569; --warn:#dc2626; --focus:#f59e0b; --strong:#991b1b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--bg); color:#0f172a; }
+    .container { max-width:1160px; margin:0 auto; padding:20px; display:grid; gap:16px; }
+    .card { background:var(--card); border-radius:12px; padding:16px; box-shadow:0 8px 20px rgba(0,0,0,.08); }
+    .hero { background:linear-gradient(135deg,#0f766e,#14b8a6); color:#fff; }
+    .hero h1 { margin:0; font-size:28px; }
+    .hero p { margin:8px 0 0; opacity:.95; font-size:13px; line-height:1.6; }
+    .toolbar { margin-top:14px; display:grid; gap:8px; }
+    .toolbar label { font-size:12px; }
+    .toolbar select { width:100%; padding:8px; border-radius:8px; border:1px solid #99f6e4; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .section-title { margin:0 0 12px; font-size:20px; }
+    .scroll-box { max-height:560px; overflow-y:auto; padding-right:6px; }
+    .food-wrap { display:flex; flex-wrap:wrap; gap:8px; max-height:420px; overflow-y:auto; padding-right:6px; align-content:flex-start; }
+    .food-tag { padding:6px 10px; border-radius:999px; background:#ccfbf1; color:#115e59; font-size:12px; border:1px solid #99f6e4; }
+    .list-item { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+    .list-item:last-child { border-bottom:none; }
+    .name-line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .name { font-weight:700; }
+    .tag { font-size:12px; padding:2px 8px; border-radius:999px; background:#cffafe; color:#155e75; border:1px solid #67e8f9; }
+    .meta { display:block; color:var(--muted); font-size:12px; margin-top:4px; line-height:1.5; }
+    button { border:0; border-radius:999px; background:var(--primary); color:#fff; padding:7px 12px; cursor:pointer; }
+    .plan-item { border-top:1px solid var(--line); padding-top:12px; margin-top:12px; }
+    .plan-row { display:flex; justify-content:space-between; gap:12px; }
+    .plan-main { display:flex; gap:10px; flex:1; }
+    .idx { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--primary); color:#fff; font-size:12px; flex-shrink:0; }
+    .time-editor { display:flex; align-items:center; gap:8px; flex-wrap:wrap; background:#fff7ed; border:1px solid #fdba74; border-radius:8px; padding:8px; margin-top:8px; }
+    .time-editor input { width:68px; border:2px solid var(--focus); border-radius:8px; padding:4px 6px; font-weight:700; }
+    .plan-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    .plan-btn { font-size:12px; padding:6px 10px; }
+    .delete { background:var(--warn); }
+    .leg-block { margin:10px 0; padding:10px; border-left:3px solid #14b8a6; background:#f8fafc; border-radius:8px; display:flex; justify-content:space-between; gap:8px; align-items:center; }
+    .leg-left { flex:1; min-width:0; }
+    .distance-line { font-size:13px; color:#155e75; margin-bottom:6px; }
+    .mode-line { display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-size:12px; color:#334155; }
+    .mode-line label { display:inline-flex; gap:4px; align-items:center; }
+    .leg-right { text-align:right; font-size:22px; font-weight:900; color:#111827; min-width:120px; }
+    .leg-right small { display:block; font-size:12px; color:#64748b; font-weight:600; }
+    .timeline { margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1; }
+    .summary { margin-top:12px; padding-top:12px; border-top:1px dashed #94a3b8; }
+    .summary-traffic { font-weight:900; color:var(--strong); background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:8px 10px; margin-bottom:8px; font-size:18px; }
+    .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .summary-col { border:1px solid var(--line); border-radius:10px; padding:10px; background:#f8fafc; font-size:14px; line-height:1.7; }
+    .empty { color:var(--muted); font-size:14px; }
+    @media (max-width:920px) { .grid,.summary-grid { grid-template-columns:1fr; } .plan-row { flex-direction:column; } .leg-block { flex-direction:column; align-items:flex-start; } .leg-right { text-align:left; } }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="card hero">
+      <h1>旅游攻略规划 H5</h1>
+      <p>已扩展 32 个热门旅游城市。城市热度参考携程/飞猪/同程/去哪儿等公开报告，美食热度参考大众点评必吃榜等公开信息；景点与美食均为中文。</p>
+      <div class="toolbar">
+        <label for="citySelect">选择城市（30+）</label>
+        <select id="citySelect"></select>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2 class="section-title">热门景点（可下拉）</h2>
+        <div id="spots" class="scroll-box"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">热门美食（可下拉）</h2>
+        <div id="foods" class="food-wrap"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title">今日线路日程</h2>
+      <div id="plan"></div>
+      <div id="summary" class="summary" style="display:none"></div>
+    </section>
+  </main>
+
+  <script src="./city-data.js"></script>
+  <script>
+    const MODE_CONFIG = {
+      bike: { label: '骑车', speedKmH: 15, overheadMin: 2 },
+      car: { label: '开车', speedKmH: 32, overheadMin: 6 },
+      transit: { label: '公共交通', speedKmH: 24, overheadMin: 12 }
+    };
+
+    const STAY_PATTERN = [120, 90, 150, 80, 110, 95, 70, 130];
+
+    function buildCityData(cityId, cfg) {
+      return {
+        name: cfg.name,
+        spots: cfg.spots.map(([name, type], index) => {
+          const latOffset = ((index % 4) - 1.5) * 0.03 + Math.floor(index / 4) * 0.006;
+          const lngOffset = ((index % 4) - 1.5) * -0.03 - Math.floor(index / 4) * 0.004;
+          return {
+            id: `${cityId}s${index + 1}`,
+            name,
+            type,
+            recommendedStayMin: STAY_PATTERN[index % STAY_PATTERN.length],
+            lat: Number((cfg.center[0] + latOffset).toFixed(4)),
+            lng: Number((cfg.center[1] + lngOffset).toFixed(4))
+          };
+        }),
+        foods: cfg.foods.map(([name, area], index) => ({ id: `${cityId}f${index + 1}`, name, area }))
+      };
+    }
+
+    const SOURCE_DATA = window.CITY_LIBRARY || {};
+    const CITY_DATA = Object.fromEntries(
+      Object.entries(SOURCE_DATA).map(([cityId, cfg]) => [cityId, buildCityData(cityId, cfg)])
+    );
+
+    const cityKeys = Object.keys(CITY_DATA);
+    let currentCityId = cityKeys[0] || '';
+    let currentLocation = null;
+    const planIds = [];
+    const customStayMinMap = {};
+    const legModeMap = {};
+
+    function formatDuration(mins) {
+      const total = Math.max(0, Math.floor(mins));
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      if (h === 0) return `${m}分钟`;
+      if (m === 0) return `${h}小时`;
+      return `${h}小时${m}分钟`;
+    }
+
+    function formatTimeWithDay(date, startDate) {
+      const startZero = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const nowZero = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const diff = Math.floor((nowZero - startZero) / 86400000);
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      if (diff === 0) return `${hh}:${mm}`;
+      if (diff === 1) return `次日 ${hh}:${mm}`;
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${hh}:${mm}`;
+    }
+
+    function haversineKm(lat1, lng1, lat2, lng2) {
+      const R = 6371;
+      const toRad = (d) => (d * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return Number((R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1));
+    }
+
+    function calcTravelMin(distanceKm, modeKey) {
+      const cfg = MODE_CONFIG[modeKey];
+      return Math.max(1, Math.ceil((distanceKm / cfg.speedKmH) * 60 + cfg.overheadMin));
+    }
+
+    function getCurrentCity() { return CITY_DATA[currentCityId]; }
+
+    function getStartPoint() {
+      if (currentLocation) {
+        return { name: '当前位置（自动定位）', lat: currentLocation.lat, lng: currentLocation.lng };
+      }
+      const fallback = getCurrentCity().spots[0];
+      return { name: '当前位置（定位失败，使用城市中心）', lat: fallback.lat, lng: fallback.lng };
+    }
+
+    function legKey(fromId, toId) { return `${fromId}__${toId}`; }
+
+    function renderCitySelector() {
+      const el = document.getElementById('citySelect');
+      el.innerHTML = Object.keys(CITY_DATA).map((k) => `<option value="${k}" ${k===currentCityId?'selected':''}>${CITY_DATA[k].name}</option>`).join('');
+      el.onchange = () => {
+        currentCityId = el.value;
+        planIds.length = 0;
+        Object.keys(customStayMinMap).forEach((k) => delete customStayMinMap[k]);
+        Object.keys(legModeMap).forEach((k) => delete legModeMap[k]);
+        requestLocation();
+        renderAll();
+      };
+    }
+
+    function renderSpots() {
+      const city = getCurrentCity();
+      const el = document.getElementById('spots');
+      el.innerHTML = city.spots.map((spot) => `
+        <article class="list-item">
+          <div>
+            <div class="name-line"><span class="name">${spot.name}</span><span class="tag">推荐 ${formatDuration(spot.recommendedStayMin)}</span></div>
+            <span class="meta">类型：${spot.type}</span>
+          </div>
+          <button data-id="${spot.id}">加入日程</button>
+        </article>
+      `).join('');
+      el.querySelectorAll('button').forEach((btn) => { btn.onclick = () => addSpot(btn.dataset.id); });
+    }
+
+    function renderFoods() {
+      const city = getCurrentCity();
+      const el = document.getElementById('foods');
+      el.innerHTML = city.foods.map((food) => `<span class="food-tag">${food.name}（${food.area}）</span>`).join('');
+    }
+
+    function addSpot(id) {
+      if (planIds.includes(id)) return alert('该景点已在日程中');
+      const spot = getCurrentCity().spots.find((x) => x.id === id);
+      if (!spot) return;
+      planIds.push(id);
+      if (customStayMinMap[id] == null) customStayMinMap[id] = spot.recommendedStayMin;
+      renderPlan();
+    }
+
+    function removeSpot(index) {
+      const id = planIds[index];
+      if (id) delete customStayMinMap[id];
+      planIds.splice(index, 1);
+      renderPlan();
+    }
+
+    function moveUp(index) {
+      if (index <= 0) return;
+      [planIds[index - 1], planIds[index]] = [planIds[index], planIds[index - 1]];
+      renderPlan();
+    }
+
+    function moveDown(index) {
+      if (index >= planIds.length - 1) return;
+      [planIds[index], planIds[index + 1]] = [planIds[index + 1], planIds[index]];
+      renderPlan();
+    }
+
+    function updateStay(id, field, value) {
+      const n = Math.max(0, Math.floor(Number(value) || 0));
+      const cur = customStayMinMap[id] || 0;
+      let h = Math.floor(cur / 60);
+      let m = cur % 60;
+      if (field === 'hour') h = n; else m = Math.min(59, n);
+      customStayMinMap[id] = h * 60 + m;
+      renderPlan();
+    }
+
+    function bindPlanActions() {
+      document.querySelectorAll('.btn-del').forEach((el) => { el.onclick = () => removeSpot(Number(el.dataset.i)); });
+      document.querySelectorAll('.btn-up').forEach((el) => { el.onclick = () => moveUp(Number(el.dataset.i)); });
+      document.querySelectorAll('.btn-down').forEach((el) => { el.onclick = () => moveDown(Number(el.dataset.i)); });
+      document.querySelectorAll('.stay').forEach((el) => { el.onchange = () => updateStay(el.dataset.id, el.dataset.f, el.value); });
+      document.querySelectorAll('.leg-mode').forEach((el) => { el.onchange = () => { legModeMap[el.dataset.k] = el.value; renderPlan(); }; });
+    }
+
+    function renderLeg(fromName, fromId, fromLat, fromLng, toName, toId, toLat, toLng) {
+      const km = haversineKm(fromLat, fromLng, toLat, toLng);
+      const key = legKey(fromId, toId);
+      if (!legModeMap[key]) legModeMap[key] = 'transit';
+      const mode = legModeMap[key];
+      const t = calcTravelMin(km, mode);
+      const radios = Object.keys(MODE_CONFIG).map((m) => `<label><input class='leg-mode' data-k='${key}' type='radio' name='mode_${key}' value='${m}' ${m===mode?'checked':''}/> ${MODE_CONFIG[m].label}</label>`).join('');
+      return {
+        t,
+        html: `<div class='leg-block'><div class='leg-left'><div class='distance-line'>${fromName} → ${toName}，距离约 ${km} km</div><div class='mode-line'><span>交通方式：</span>${radios}</div></div><div class='leg-right'><small>本段耗时</small>${formatDuration(t)}</div></div>`
+      };
+    }
+
+    function renderPlan() {
+      const city = getCurrentCity();
+      const list = planIds.map((id) => city.spots.find((s) => s.id === id)).filter(Boolean);
+      const plan = document.getElementById('plan');
+      const sum = document.getElementById('summary');
+
+      if (!list.length) {
+        plan.innerHTML = '<div class="empty">还没有景点，先从上方加入景点吧。</div>';
+        sum.style.display = 'none';
+        return;
+      }
+
+      let rec = 0;
+      let cus = 0;
+      let tr = 0;
+
+      const out = [];
+      const start = new Date();
+      let cursor = new Date(start);
+
+      const sp = getStartPoint();
+      const firstLeg = renderLeg(sp.name, 'start', sp.lat, sp.lng, list[0].name, list[0].id, list[0].lat, list[0].lng);
+      tr += firstLeg.t;
+      out.push(firstLeg.html);
+      cursor = new Date(cursor.getTime() + firstLeg.t * 60000);
+
+      list.forEach((spot, i) => {
+        const stay = customStayMinMap[spot.id] ?? spot.recommendedStayMin;
+        rec += spot.recommendedStayMin;
+        cus += stay;
+
+        const h = Math.floor(stay / 60);
+        const m = stay % 60;
+        const arrive = new Date(cursor);
+        const leave = new Date(cursor.getTime() + stay * 60000);
+
+        out.push(`
+          <article class='plan-item'>
+            <div class='plan-row'>
+              <div class='plan-main'>
+                <span class='idx'>${i + 1}</span>
+                <div>
+                  <div class='name-line'><span class='name'>${spot.name}</span><span class='tag'>推荐 ${formatDuration(spot.recommendedStayMin)}</span></div>
+                  <span class='meta'>计划游玩：${formatDuration(stay)}</span>
+                  <div class='time-editor'>
+                    <label>调整计划</label>
+                    <input class='stay' data-id='${spot.id}' data-f='hour' type='number' min='0' value='${h}' />
+                    <span class='meta'>小时</span>
+                    <input class='stay' data-id='${spot.id}' data-f='minute' type='number' min='0' max='59' value='${m}' />
+                    <span class='meta'>分钟</span>
+                  </div>
+                  <div class='timeline'>
+                    <span class='meta'>到达时间：${formatTimeWithDay(arrive, start)}</span>
+                    <span class='meta'>离开时间：${formatTimeWithDay(leave, start)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class='plan-actions'>
+                <button class='plan-btn btn-up' data-i='${i}'>上移</button>
+                <button class='plan-btn btn-down' data-i='${i}'>下移</button>
+                <button class='plan-btn delete btn-del' data-i='${i}'>删除</button>
+              </div>
+            </div>
+          </article>
+        `);
+
+        cursor = leave;
+
+        if (i < list.length - 1) {
+          const next = list[i + 1];
+          const leg = renderLeg(spot.name, spot.id, spot.lat, spot.lng, next.name, next.id, next.lat, next.lng);
+          tr += leg.t;
+          out.push(leg.html);
+          cursor = new Date(cursor.getTime() + leg.t * 60000);
+        }
+      });
+
+      plan.innerHTML = out.join('');
+      bindPlanActions();
+
+      sum.style.display = 'block';
+      sum.innerHTML = `
+        <div class='summary-traffic'>总交通时长：${formatDuration(tr)}</div>
+        <div class='summary-grid'>
+          <div class='summary-col'><div><b>推荐方案</b></div><div>推荐游玩总时长：${formatDuration(rec)}</div><div>推荐全天预计：${formatDuration(rec + tr)}</div></div>
+          <div class='summary-col'><div><b>自定义方案</b></div><div>计划游玩总时长：${formatDuration(cus)}</div><div>自定义全天预计：${formatDuration(cus + tr)}</div></div>
+        </div>
+      `;
+    }
+
+    function requestLocation() {
+      if (!navigator.geolocation) {
+        currentLocation = null;
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { currentLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; renderPlan(); },
+        () => { currentLocation = null; renderPlan(); },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+
+    function renderAll() {
+      if (!Object.keys(CITY_DATA).length) {
+        document.body.innerHTML = '<div style="padding:20px;font-family:Microsoft YaHei">未加载到城市数据，请确认 city-data.js 文件存在。</div>';
+        return;
+      }
+      renderCitySelector();
+      renderSpots();
+      renderFoods();
+      renderPlan();
+    }
+
+    requestLocation();
+    renderAll();
+  </script>
+</body>
+</html>

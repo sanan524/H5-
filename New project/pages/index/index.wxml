@@ -1,0 +1,56 @@
+﻿<view class="page">
+  <view class="hero card">
+    <text class="title">地方游玩规划</text>
+    <text class="subtitle">推荐景点/小吃 + 智能日程 + 交通时间估算</text>
+  </view>
+
+  <view class="card">
+    <view class="section-title">推荐景点</view>
+    <block wx:for="{{spots}}" wx:key="id">
+      <view class="item">
+        <view class="item-main">
+          <text class="item-name">{{item.name}}</text>
+          <text class="item-meta">建议游玩：{{item.recommendedStayMin}} 分钟</text>
+          <text class="item-meta">类型：{{item.type}}</text>
+        </view>
+        <button class="action-btn" size="mini" data-id="{{item.id}}" bindtap="addSpotToPlan">加入日程</button>
+      </view>
+    </block>
+  </view>
+
+  <view class="card">
+    <view class="section-title">小吃推荐</view>
+    <view class="food-list">
+      <text class="food-tag" wx:for="{{foods}}" wx:key="id">{{item.name}}（{{item.area}}）</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">今日线路日程</view>
+    <view wx:if="{{planView.length === 0}}" class="empty">
+      <text>还没有景点，先从上方添加吧。</text>
+    </view>
+    <block wx:for="{{planView}}" wx:key="id">
+      <view class="plan-item">
+        <view class="plan-row">
+          <text class="plan-index">{{index + 1}}</text>
+          <view class="plan-info">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-meta">建议游玩 {{item.recommendedStayMin}} 分钟</text>
+            <text class="item-meta" wx:if="{{item.transportFromPrev}}">
+              从上一站 {{item.transportFromPrev.mode}} 约 {{item.transportFromPrev.durationMin}} 分钟（{{item.transportFromPrev.distanceKm}} km）
+            </text>
+            <text class="item-meta" wx:if="{{item.transportFromPrev}}">数据来源：{{item.transportFromPrev.source}}</text>
+            <text class="item-meta" wx:else>第一站，无需交通换乘</text>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:if="{{planView.length > 0}}" class="summary">
+      <text>总游玩时间：{{summary.totalStayMin}} 分钟</text>
+      <text>总交通时间：{{summary.totalTravelMin}} 分钟</text>
+      <text>全天预计：{{summary.totalDayMin}} 分钟</text>
+    </view>
+  </view>
+</view>
